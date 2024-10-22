@@ -12,7 +12,7 @@ class ApiController {
         $this->connection = DatabaseController::connect();
     }
 
-    public function getLinks($mode = self::OBJECT) {
+    public static function getLinks($mode = self::OBJECT) {
 
         try  {
        
@@ -20,16 +20,17 @@ class ApiController {
                     FROM User
                     WHERE 1";
         
-            $statement = $this->connection->prepare($sql);
-            $statement->setFetchMode(PDO::FETCH_OBJ);
+            
+            $statement = (new self)->connection->prepare($sql);
+            $statement->setFetchMode(PDO::FETCH_ASSOC);
             $statement->execute();
 
             $result = $statement->fetchAll();
 
-            if (mode == self::OBJECT) {
+            if ($mode == self::OBJECT) {
                 return $result;
-            } else if (mode == self::JSON) {
-                return json_encode($result);
+            } else if ($mode == self::JSON) {
+                return json_encode($result, JSON_PRETTY_PRINT);
             }
 
           } catch(PDOException $error) {

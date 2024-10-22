@@ -7,7 +7,7 @@ class DatabaseController {
     private static $host = "localhost";
     private static $username = "usuario";
     private static $password = "password";
-    private static $dbname = "dblinks";
+    private static $dbname = "api";
     //private $dsn = 'mysql:host='.$host.';dbname='.$dbname;
     private static $options = array(
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, 
