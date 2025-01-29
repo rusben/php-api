@@ -22,20 +22,36 @@ switch ($chunks[2]) {
 
     case 'users':
 
-        // Hay algo detrás de users/
+        // There is anything after api/users/??
         if ($chunks[3] != "") {
-        
+
+            $userId = $chunks[3];
+
+            if ($_SERVER["REQUEST_METHOD"] == "GET") {
+                // GET users/{id}
+                echo ApiController::getUser($userId, ApiController::JSON);
+                die();
+            } elseif ($_SERVER["REQUEST_METHOD"] == "PUT") {
+                // PUT users/{id}
+                echo ApiController::updateUser($userId, ApiController::JSON);
+                die();
+            } elseif ($_SERVER["REQUEST_METHOD"] == "DELETE") {
+                // DELETE users/{id}
+                echo ApiController::deleteUser($userId);
+                die();
+            }
+
         } else {
-            
             
             if ($_SERVER["REQUEST_METHOD"] == "GET") {
                 // GET users/
-                echo ApiController::getLinks(ApiController::JSON);
+                echo ApiController::getUsers(ApiController::JSON);
                 die();
             } else if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // POST users/
-
-            }
+                echo ApiController::addUser(ApiController::JSON);
+                die();
+            } 
 
         }
         break;
