@@ -164,21 +164,27 @@ class ApiController {
 
         // Define the valid fields
         $requiredFields = [
-            "name" => "name",
-            "surname" => "surname",
-            "email" => "email",
-            "dni" => "dni",
-            "phone" => "phone",
-            "born" => "born"
+            "name",
+            "surname",
+            "email",
+            "dni",
+            "phone",
+            "born"
         ];
         $presentFields = [];
 
         // Verify which fields are in the request
         foreach ($data as $key => $value) {
-            if (isset($requiredFields[$key])) {
-                // Add the fields presents in the request
-                $presentFields[] = $key;
-            } else {
+            // Check if field in data is present in the request
+            $fieldFound = false;
+            foreach ($requiredFields as $field) {
+                if ($key == $field) {
+                    $fieldFound = true;
+                    $presentFields[] = $key;    
+                }
+            }
+
+            if (!$fieldFound) {
                 // There is a invalid field in the request, stop processing
                 echo json_encode(['status' => 'error', 'message' => 'There are invalid fields in request']);
                 return;
@@ -192,12 +198,12 @@ class ApiController {
         }
 
         try {
+
             // Define the query
             $sql = "UPDATE User SET ";
             $sql .= implode(", ", array_map(fn($presentField) => "$presentField = :$presentField", $presentFields));
             $sql .= " WHERE id = :id;";
 
-            
             // Prepare the query
             $statement = (new self)->connection->prepare($sql);
 
@@ -207,12 +213,18 @@ class ApiController {
                 $statement->bindValue(":".$presentField, $data[$presentField]);
             }
 
-            // Execute the query and verify the result
-            if ($statement->execute()) {
-                echo json_encode(['status' => 'success', 'message' => 'User updated successfuly.']);
-                return;
+             // Check user exist
+             if (self::userExist($id)) {
+                // Execute the query
+                if ($statement->execute()) {
+                    echo json_encode(['status' => 'success', 'message' => 'User updated successfuly.']);
+                    return;
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Error updating the user.']);
+                    return;
+                }
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error updating the user.']);
+                echo json_encode(['status' => 'error', 'message' => 'Error, no user found with this id']);
                 return;
             }
 
@@ -234,7 +246,7 @@ class ApiController {
             $statement->bindValue(':id', $id);
 
             // Check user exist
-            if (userExist($id)) {
+            if (self::userExist($id)) {
                 // Execute the query
                 if ($statement->execute()) {
                     echo json_encode(['status' => 'success', 'message' => 'User deleted successfully']);
