@@ -1,0 +1,138 @@
+### php-api · Colección de peticiones
+### Compatible con la extensión "REST Client" de VS Code y con el cliente HTTP de PhpStorm.
+### Servidor de desarrollo: composer start  ->  http://localhost:8000
+
+@baseUrl = http://localhost:8000/api
+
+### Información de la API
+GET {{baseUrl}}/
+
+### ---------------------------------------------------------------- USUARIOS
+
+### Listar usuarios (paginado)
+GET {{baseUrl}}/users?page=1&per_page=10
+
+### Listar usuarios con su perfil (1:1) y sus posts (1:N)
+GET {{baseUrl}}/users?include=profile,posts
+
+### Obtener un usuario con sus relaciones
+GET {{baseUrl}}/users/1?include=profile,posts
+
+### Crear un usuario
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Ana",
+  "surname": "García López",
+  "email": "ana@example.com",
+  "dni": "12345678Z",
+  "phone": "612345678",
+  "born": "1990-04-12"
+}
+
+### Crear un usuario con su perfil y sus posts en una sola petición (transacción)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Luis",
+  "surname": "Martín Pérez",
+  "email": "luis@example.com",
+  "dni": "23456789D",
+  "phone": "+34 698 765 432",
+  "born": "1985-11-30",
+  "profile": {
+    "city": "Valencia",
+    "country": "España",
+    "website": "https://luis.example.com"
+  },
+  "posts": [
+    { "title": "Hola mundo", "content": "Mi primer post." }
+  ]
+}
+
+### Actualizar solo algunos campos de un usuario
+PATCH {{baseUrl}}/users/1
+Content-Type: application/json
+
+{
+  "phone": "699000111"
+}
+
+### Borrar un usuario (borra también su perfil y sus posts)
+DELETE {{baseUrl}}/users/1
+
+### ------------------------------------------------------- PERFIL (1:1)
+
+### Ver el perfil de un usuario
+GET {{baseUrl}}/users/1/profile
+
+### Crear o actualizar el perfil de un usuario
+PUT {{baseUrl}}/users/3/profile
+Content-Type: application/json
+
+{
+  "city": "Sevilla",
+  "bio": "Estudiante de DAW"
+}
+
+### Borrar el perfil de un usuario
+DELETE {{baseUrl}}/users/3/profile
+
+### -------------------------------------------------------- POSTS (1:N)
+
+### Listar los posts de un usuario
+GET {{baseUrl}}/users/1/posts
+
+### Crear un post para un usuario
+POST {{baseUrl}}/users/1/posts
+Content-Type: application/json
+
+{
+  "title": "Otro post",
+  "content": "Contenido del post."
+}
+
+### Listar todos los posts
+GET {{baseUrl}}/posts
+
+### Filtrar posts por autor
+GET {{baseUrl}}/posts?user_id=1
+
+### Obtener un post
+GET {{baseUrl}}/posts/1
+
+### Modificar un post
+PATCH {{baseUrl}}/posts/1
+Content-Type: application/json
+
+{
+  "title": "Título nuevo"
+}
+
+### Borrar un post
+DELETE {{baseUrl}}/posts/1
+
+### ------------------------------------------------ CASOS DE ERROR (para probar)
+
+### 422: datos inválidos (email, DNI y teléfono incorrectos)
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "surname": "Error",
+  "email": "no-es-un-email",
+  "dni": "12345678A",
+  "phone": "abc",
+  "born": "2999-01-01"
+}
+
+### 409: email o DNI duplicados (ejecuta dos veces la creación de Ana)
+
+### 404: usuario inexistente
+GET {{baseUrl}}/users/99999
+
+### 405: método no permitido
+DELETE {{baseUrl}}/users

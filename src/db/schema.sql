@@ -1,65 +1,71 @@
--- phpMyAdmin SQL Dump
--- version 5.1.1deb5ubuntu1
--- https://www.phpmyadmin.net/
+-- ============================================================================
+--  php-api · Esquema de base de datos (MySQL 5.7+ / MariaDB 10.3+)
 --
--- Servidor: localhost:3306
--- Tiempo de generación: 21-10-2024 a las 15:52:03
--- Versión del servidor: 8.0.39-0ubuntu0.22.04.1
--- Versión de PHP: 8.1.2-1ubuntu2.19
+--  Uso:   mysql -u root -p < src/db/schema.sql
+--
+--  Es idempotente (CREATE ... IF NOT EXISTS): si ya tenías la tabla `User` de la
+--  versión anterior, puedes ejecutarlo igualmente; solo creará `Profile` y `Post`.
+--
+--  Relaciones:
+--    User 1 ──── 0..1 Profile   (Profile.user_id es UNIQUE -> relación 1:1)
+--    User 1 ──── 0..N Post      (Post.user_id no es único  -> relación 1:N)
+--  Al borrar un usuario se borran en cascada su perfil y sus posts.
+-- ============================================================================
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
+CREATE DATABASE IF NOT EXISTS `api`
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
 
+USE `api`;
 
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+-- ----------------------------------------------------------------------------
+--  User
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `User` (
+  `id`      INT          NOT NULL AUTO_INCREMENT,
+  `name`    VARCHAR(100) NOT NULL,
+  `surname` VARCHAR(150) NOT NULL,
+  `email`   VARCHAR(320) NOT NULL,
+  `dni`     VARCHAR(9)   NOT NULL,
+  `phone`   VARCHAR(20)  NOT NULL,
+  `born`    DATE         NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_user_email` (`email`),
+  UNIQUE KEY `uq_user_dni` (`dni`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Base de datos: `api`
---
+-- ----------------------------------------------------------------------------
+--  Profile  (1:1 con User)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Profile` (
+  `id`          INT           NOT NULL AUTO_INCREMENT,
+  `user_id`     INT           NOT NULL,
+  `address`     VARCHAR(255)  NULL,
+  `city`        VARCHAR(100)  NULL,
+  `postal_code` VARCHAR(10)   NULL,
+  `country`     VARCHAR(100)  NULL,
+  `bio`         VARCHAR(1000) NULL,
+  `website`     VARCHAR(255)  NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_profile_user` (`user_id`),
+  CONSTRAINT `fk_profile_user`
+    FOREIGN KEY (`user_id`) REFERENCES `User` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
-
---
--- Estructura de tabla para la tabla `User`
---
-
-CREATE TABLE `User` (
-  `id` int NOT NULL,
-  `name` text NOT NULL,
-  `surname` text NOT NULL,
-  `email` varchar(320) NOT NULL,
-  `dni` varchar(9) NOT NULL,
-  `phone` text NOT NULL,
-  `born` date NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Índices para tablas volcadas
---
-
---
--- Indices de la tabla `User`
---
-ALTER TABLE `User`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD UNIQUE KEY `dni` (`dni`);
-
---
--- AUTO_INCREMENT de las tablas volcadas
---
-
---
--- AUTO_INCREMENT de la tabla `User`
---
-ALTER TABLE `User`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
-COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+-- ----------------------------------------------------------------------------
+--  Post  (N:1 con User, es decir, 1:N desde User)
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Post` (
+  `id`         INT          NOT NULL AUTO_INCREMENT,
+  `user_id`    INT          NOT NULL,
+  `title`      VARCHAR(150) NOT NULL,
+  `content`    TEXT         NOT NULL,
+  `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_post_user` (`user_id`),
+  CONSTRAINT `fk_post_user`
+    FOREIGN KEY (`user_id`) REFERENCES `User` (`id`)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

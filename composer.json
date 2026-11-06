@@ -1,5 +1,26 @@
 {
+    "name": "rusben/php-api",
+    "description": "API REST en PHP puro (PDO + MySQL) con relaciones 1:1 y 1:N",
+    "type": "project",
+    "license": "GPL-3.0-only",
+    "require": {
+        "php": ">=8.1",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*"
+    },
     "autoload": {
-      "classmap": ["src"]
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "scripts": {
+        "start": [
+            "Composer\\Config::disableProcessTimeout",
+            "php -S localhost:8000 -t public public/api/index.php"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true
     }
 }

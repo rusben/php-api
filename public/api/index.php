@@ -1,64 +1,23 @@
 <?php
 
-require_once "../../vendor/autoload.php";
+declare(strict_types=1);
 
-$request = $_SERVER['REQUEST_URI'];
+/**
+ * Front controller de la API. Todas las peticiones a /api/* terminan aquí
+ * (ver .htaccess para Apache o "composer start" para el servidor integrado de PHP).
+ */
 
-$chunks = explode("/", $request);
+use App\Application;
+use App\Config\Config;
+use App\Http\Request;
 
-// print_r("<pre>");
-// print_r($chunks);
-// print_r("</pre>");
+require __DIR__ . '/../../vendor/autoload.php';
 
-switch ($chunks[2]) {
-    case '':
-    case '/':
-        
-        // header('HTTP/1.0 401 Unauthorized');
-        http_response_code(401);
-        echo '<h1>Unauthorized</h1>';
-        die();
-        break;
+Config::load(dirname(__DIR__, 2));
 
-    case 'users':
+// La API responde siempre JSON: los errores de PHP no deben ensuciar la salida (se registran en el log).
+ini_set('display_errors', '0');
 
-        // There is anything after api/users/??
-        if ($chunks[3] != "") {
+$request = Request::fromGlobals((string) Config::get('BASE_PATH', '/api'));
 
-            $userId = $chunks[3];
-
-            if ($_SERVER["REQUEST_METHOD"] == "GET") {
-                // GET users/{id}
-                echo ApiController::getUser($userId, ApiController::JSON);
-                die();
-            } elseif ($_SERVER["REQUEST_METHOD"] == "PUT") {
-                // PUT users/{id}
-                echo ApiController::updateUser($userId, ApiController::JSON);
-                die();
-            } elseif ($_SERVER["REQUEST_METHOD"] == "DELETE") {
-                // DELETE users/{id}
-                echo ApiController::deleteUser($userId);
-                die();
-            }
-
-        } else {
-            
-            if ($_SERVER["REQUEST_METHOD"] == "GET") {
-                // GET users/
-                echo ApiController::getUsers(ApiController::JSON);
-                die();
-            } else if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                // POST users/
-                echo ApiController::addUser(ApiController::JSON);
-                die();
-            } 
-
-        }
-        break;
-
-    case 'not-found':
-    default:
-        http_response_code(404);
-        echo '<h1>Not found!</h1>';
-        die();
-}
+(new Application())->handle($request)->send();
